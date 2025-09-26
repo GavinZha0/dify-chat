@@ -50,9 +50,9 @@ export default function AppInputWrapper(props: IAppInputFormProps) {
 			key: COLLAPSE_KEY,
 			label: (
 				<div className="flex items-center">
-					<div className="font-semibold text-base">对话参数设置</div>
+					<div className="font-semibold text-base">{t('Conversation parameters')}</div>
 					{!currentApp.config?.inputParams?.enableUpdateAfterCvstStarts ? (
-						<div className="text-desc">（注意：对话开始后，参数设置将无法修改）</div>
+						<div className="text-desc">（{t('Note')}: {t('parameters can not be updated during conversation')}）</div>
 					) : null}
 				</div>
 			),

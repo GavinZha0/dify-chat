@@ -83,7 +83,7 @@ export default function AppInputForm(props: IAppInputFormProps) {
 					const { error, data } = unParseGzipString(searchValue || cachedValue)
 
 					if (error) {
-						message.error(`解压缩参数 ${originalProps.variable} 失败: ${error}`)
+						message.error(`Fail to parse ${originalProps.variable}: ${error}`)
 					}
 
 					// 解析正常且是新对话 或者允许更新对话参数，则写入 URL 参数
@@ -145,7 +145,7 @@ export default function AppInputForm(props: IAppInputFormProps) {
 				}
 				if (originalProps.required) {
 					baseProps.required = true
-					baseProps.rules = [{ required: true, message: '请输入' }]
+					baseProps.rules = [{ required: true, message: t('Please input') }]
 				}
 				return baseProps
 			}) || [],
@@ -199,7 +199,7 @@ export default function AppInputForm(props: IAppInputFormProps) {
 												? [
 														{
 															required: true,
-															message: `${item.label}不能为空`,
+															message: `${t('Field must not be empty')}: ${item.label}`,
 														},
 													]
 												: []
@@ -207,13 +207,13 @@ export default function AppInputForm(props: IAppInputFormProps) {
 									>
 										{item.type === 'text-input' ? (
 											<Input
-												placeholder="请输入"
+												placeholder={t("Please input")}
 												maxLength={item.max_length}
 												disabled={disabled}
 											/>
 										) : item.type === 'select' ? (
 											<Select
-												placeholder="请选择"
+												placeholder={t("Please select")}
 												disabled={disabled}
 												options={
 													item.options?.map(option => {
@@ -226,13 +226,13 @@ export default function AppInputForm(props: IAppInputFormProps) {
 											/>
 										) : item.type === 'paragraph' ? (
 											<Input.TextArea
-												placeholder="请输入"
+												placeholder={t("Please input")}
 												disabled={disabled}
 												maxLength={item.max_length}
 											/>
 										) : item.type === 'number' ? (
 											<InputNumber
-												placeholder="请输入"
+												placeholder={t("Please input")}
 												disabled={disabled}
 												className="w-full"
 											/>
@@ -251,7 +251,7 @@ export default function AppInputForm(props: IAppInputFormProps) {
 												uploadFileApi={uploadFileApi}
 											/>
 										) : (
-											`暂不支持的控件类型: ${item.type}`
+											`${t('Unsupported type')}: ${item.type}`
 										)}
 									</Form.Item>
 								)

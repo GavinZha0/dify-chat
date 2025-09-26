@@ -56,7 +56,7 @@ export const Logo = (props: ILogoProps) => {
 					renderLogo()
 				) : (
 					<img
-						className="w-8 h-8 inline-block"
+						className="w-18 h-8 inline-block"
 						src={LogoImage}
 						draggable={false}
 						alt="logo"

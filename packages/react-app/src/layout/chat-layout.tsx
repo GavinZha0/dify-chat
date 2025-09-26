@@ -1,37 +1,27 @@
-import {
-	EditOutlined,
-	MenuOutlined,
-	MinusCircleOutlined,
-	PlusCircleOutlined,
-	PlusOutlined,
-} from '@ant-design/icons'
-import { DifyApi, IConversationItem } from '@dify-chat/api'
-import { ConversationsContextProvider, IDifyAppItem, useAppContext } from '@dify-chat/core'
-import { generateUuidV4, isTempId, useIsMobile } from '@dify-chat/helpers'
-import { ThemeModeEnum, ThemeModeLabelEnum, useThemeContext } from '@dify-chat/theme'
-import {
-	Button,
-	Dropdown,
-	Empty,
-	Form,
-	GetProp,
-	Input,
-	message,
-	Modal,
-	Popover,
-	Radio,
-	Spin,
-	Tooltip,
-} from 'antd'
-import dayjs from 'dayjs'
-import { useSearchParams } from 'pure-react-router'
-import React, { useEffect, useMemo, useState } from 'react'
+import { AppstoreOutlined, EditOutlined, MenuOutlined, MessageOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { DifyApi, IConversationItem } from '@dify-chat/api';
+import { ConversationsContextProvider, DEFAULT_APP_SITE_SETTING, IDifyAppItem, useAppContext } from '@dify-chat/core';
+import { generateUuidV4, isTempId, LocalStorageKeys, LocalStorageStore, useIsMobile } from '@dify-chat/helpers';
+import { ThemeModeEnum, ThemeModeLabelEnum, useThemeContext } from '@dify-chat/theme';
+import { Button, Dropdown, Empty, Form, GetProp, Input, message, Modal, Popover, Radio, Spin, Tabs, Tooltip } from 'antd';
+import dayjs from 'dayjs';
+import { useSearchParams } from 'pure-react-router';
+import { useHistory } from 'pure-react-router';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { AppIcon, AppInfo, ConversationList, LucideIcon } from '@/components'
-import { HeaderLayout } from '@/components'
-import ChatboxWrapper from '@/components/chatbox-wrapper'
-import { DEFAULT_CONVERSATION_NAME } from '@/constants'
-import { useLatest } from '@/hooks/use-latest'
+
+
+import { AppIcon, ConversationList, LucideIcon } from '@/components';
+import { HeaderLayout } from '@/components';
+import ChatboxWrapper from '@/components/chatbox-wrapper';
+import { DEFAULT_CONVERSATION_NAME } from '@/constants';
+import { useLatest } from '@/hooks/use-latest';
+import appService from '@/services/app';
+import {useLanguage} from "@/language/language-context.tsx";
+
+
+
+
 
 interface IChatLayoutProps {
 	/**
@@ -60,7 +50,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 	const { extComponents, renderCenterTitle, initLoading, difyApi } = props
 	const [sidebarOpen, setSidebarOpen] = useState(true)
 	const { themeMode, setThemeMode } = useThemeContext()
-	const { appLoading, currentApp } = useAppContext()
+	const { appLoading, currentApp, setCurrentApp } = useAppContext()
 	const [renameForm] = Form.useForm()
 	const [conversations, setConversations] = useState<IConversationItem[]>([])
 	const [currentConversationId, setCurrentConversationId] = useState<string>('')
@@ -68,11 +58,74 @@ export default function ChatLayout(props: IChatLayoutProps) {
 		return conversations?.find(item => item.id === currentConversationId)
 	}, [conversations, currentConversationId])
 	const isMobile = useIsMobile()
+	// 2. Add state for appList and loading
+	const [appList, setAppList] = useState<IDifyAppItem[]>([])
+	const [appListLoading, setAppListLoading] = useState(false)
+	const history = useHistory()
 
 	// 创建 Dify API 实例
 	const searchParams = useSearchParams()
 	const [conversationListLoading, setCoversationListLoading] = useState<boolean>(false)
 	const latestCurrentConversationId = useLatest(currentConversationId)
+	const { t } = useLanguage()
+
+	// 3. Fetch appList on mount
+	useEffect(() => {
+		setAppListLoading(true)
+		appService
+			.getApps()
+			.then(async result => {
+				const validApps = []
+
+				for (const item of result) {
+					/*
+					const newOptions = {
+						user: userId,
+						apiBase: item.requestConfig.apiBase,
+						apiKey: item.requestConfig.apiKey,
+					}
+					difyApi.updateOptions(newOptions)
+
+					try {
+						// get parameters and site settings from Dify
+						const [parameters, site] = await Promise.all([
+							difyApi.getAppParameters(),
+							difyApi.getAppSiteSetting().catch(() => DEFAULT_APP_SITE_SETTING),
+						])
+						if(parameters && site){
+							item.parameters = parameters
+							item.site = site
+							if (item.isEnabled == undefined){
+								item.isEnabled = 1
+							}
+						} else {
+							// disable this app if parameters or site settings are missing
+							item.isEnabled = 0
+						}
+					}
+					catch (e) {
+						// disable this app if any error occurs
+						// console.error(`App ${item.id} is invalid: ${e}`)
+						item.isEnabled = 0
+					}
+					finally {
+						validApps.push(item)
+					}
+					*/
+
+					if (item.isEnabled){
+						validApps.push(item)
+					}
+				}
+
+				setAppList(validApps)
+			})
+			.catch(error => {
+				message.error(`Fail to get apps: ${error}`)
+				setAppList([])
+			})
+			.finally(() => setAppListLoading(false))
+	}, [])
 
 	useEffect(() => {
 		if (!currentApp?.config) {
@@ -87,6 +140,33 @@ export default function ChatLayout(props: IChatLayoutProps) {
 			}
 		})
 	}, [currentApp?.config])
+
+
+	const handleAppSelect = async (app: IDifyAppItem) => {
+		history.push(`/app/${app.id}`)
+		try {
+			const newOptions = {
+				user: userId,
+				apiBase: app.requestConfig.apiBase,
+				apiKey: app.requestConfig.apiKey,
+			};
+			difyApi.updateOptions(newOptions);
+
+			const [parameters, site] = await Promise.all([
+				difyApi.getAppParameters(),
+				difyApi.getAppSiteSetting().catch(() => DEFAULT_APP_SITE_SETTING),
+			]);
+
+			setCurrentApp({
+				config: app,
+				parameters,
+				site,
+			});
+		} catch (error) {
+			message.error(`Fail to get app info: ${error}`);
+			setCurrentApp(undefined);
+		}
+	}
 
 	/**
 	 * 获取对话列表
@@ -115,7 +195,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 			}
 		} catch (error) {
 			console.error(error)
-			message.error(`获取会话列表失败: ${error}`)
+			message.error(`Fail to get conversations: ${error}`)
 		} finally {
 			setCoversationListLoading(false)
 		}
@@ -167,14 +247,14 @@ export default function ChatLayout(props: IChatLayoutProps) {
 		Modal.confirm({
 			centered: true,
 			destroyOnClose: true,
-			title: '编辑对话名称',
+			title: 'Edit',
 			content: (
 				<Form
 					form={renameForm}
 					className="mt-3"
 				>
 					<Form.Item name="name">
-						<Input placeholder="请输入" />
+						<Input placeholder="please input" />
 					</Form.Item>
 				</Form>
 			),
@@ -182,7 +262,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 				await renameForm.validateFields()
 				const values = await renameForm.validateFields()
 				await onRenameConversation(currentConversationId, values.name)
-				message.success('对话重命名成功')
+				message.success('Edited')
 			},
 		})
 	}
@@ -221,7 +301,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 			{
 				key: 'add_conversation',
 				icon: <PlusCircleOutlined />,
-				label: '新增对话',
+				label: t('New chat'),
 				disabled: isTempId(currentConversationId),
 				onClick: () => {
 					onAddConversation()
@@ -230,7 +310,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 			{
 				key: 'rename_conversation',
 				icon: <EditOutlined />,
-				label: '编辑对话名称',
+				label: t('Edit'),
 				disabled: isTempId(currentConversationId),
 				onClick: () => {
 					handleRenameConversation()
@@ -239,20 +319,20 @@ export default function ChatLayout(props: IChatLayoutProps) {
 			{
 				key: 'delete_conversation',
 				icon: <MinusCircleOutlined />,
-				label: '删除当前对话',
+				label: t('Delete'),
 				disabled: isTempId(currentConversationId),
 				danger: true,
 				onClick: () => {
 					Modal.confirm({
 						centered: true,
-						title: '确定删除当前对话？',
-						content: '删除后，聊天记录将不可恢复。',
-						okText: '删除',
-						cancelText: '取消',
+						title: 'Confirm？',
+						content: 'Delete conversation',
+						okText: 'Delete',
+						cancelText: 'Cancel',
 						onOk: async () => {
 							// 执行删除操作
 							await onDeleteConversation(currentConversationId)
-							message.success('删除成功')
+							message.success('Deleted')
 						},
 					})
 				},
@@ -285,14 +365,14 @@ export default function ChatLayout(props: IChatLayoutProps) {
 						),
 					},
 				],
-				label: '主题',
+				label: 'Theme',
 			},
 			{
 				type: 'divider',
 			},
 			{
 				type: 'group',
-				label: '对话列表',
+				label: 'Conversations',
 				children: conversations?.length
 					? conversations.map(item => {
 							return {
@@ -306,7 +386,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 					: [
 							{
 								key: 'no_conversation',
-								label: '暂无对话',
+								label: 'No conversations',
 								disabled: true,
 							},
 						],
@@ -325,25 +405,23 @@ export default function ChatLayout(props: IChatLayoutProps) {
 		return (
 			<Spin spinning={conversationListLoading}>
 				{conversations?.length ? (
-					<ConversationList
-						renameConversationPromise={onRenameConversation}
-						deleteConversationPromise={onDeleteConversation}
-						items={conversations.map(item => {
-							return {
+					<div style={{ height: 'calc(100vh - 300px)', overflow: 'auto' }}>
+						<ConversationList
+							renameConversationPromise={onRenameConversation}
+							deleteConversationPromise={onDeleteConversation}
+							items={conversations.map(item => ({
 								key: item.id,
 								label: item.name,
-							}
-						})}
-						activeKey={currentConversationId}
-						onActiveChange={id => {
-							setCurrentConversationId(id)
-						}}
-					/>
+							}))}
+							activeKey={currentConversationId}
+							onActiveChange={id => setCurrentConversationId(id)}
+						/>
+					</div>
 				) : (
 					<div className="w-full h-full flex items-center justify-center">
 						<Empty
 							className="pt-6"
-							description="暂无会话"
+							description="No conversations"
 						/>
 					</div>
 				)}
@@ -361,6 +439,18 @@ export default function ChatLayout(props: IChatLayoutProps) {
 	const disableNewButton = useMemo(() => {
 		return conversations?.some(item => isTempId(item.id))
 	}, [conversations])
+
+
+	const [userId, setUserId] = useState<string>('')
+
+	useEffect(() => {
+		const storedUserId = LocalStorageStore.get(LocalStorageKeys.USER_ID)
+		if (storedUserId) {
+			setUserId(storedUserId)
+		} else {
+			setUserId('')
+		}
+	}, [])
 
 	return (
 		<ConversationsContextProvider
@@ -404,59 +494,74 @@ export default function ChatLayout(props: IChatLayoutProps) {
 								className={`hidden md:!flex ${sidebarOpen ? 'w-72' : 'w-14'} transition-all h-full flex-col border-0 border-r border-solid border-r-theme-splitter`}
 							>
 								{sidebarOpen ? (
-									<>
-										{currentApp.config.info ? <AppInfo /> : null}
-										{/* 添加会话 */}
-										{currentApp ? (
-											<Button
-												disabled={disableNewButton}
-												onClick={() => {
-													onAddConversation()
-												}}
-												type="default"
-												className="h-10 leading-10 rounded-lg border border-solid border-gray-200 mt-3 mx-4 text-theme-text "
-												icon={<PlusOutlined className="" />}
-											>
-												新增对话
-											</Button>
-										) : null}
-										{/* 🌟 对话管理 */}
-										<div className="px-4 mt-3 flex-1 overflow-auto">
-											{conversationListWithEmpty}
-										</div>
-									</>
+									<Tabs
+										defaultActiveKey="chat"
+										className="h-full flex flex-col"
+										tabBarStyle={{ width: '100%' }}
+										moreIcon={null}
+										items={[
+											{
+												key: 'apps',
+												label: (
+													<div className="text-center flex items-center justify-center gap-2 w-full px-2">
+														<AppstoreOutlined />
+														{t('Apps')}
+													</div>
+												),
+												children: (
+													<div className="px-4 mt-3 flex-1 overflow-auto">
+														<Spin spinning={appListLoading}>
+															{appList.length ? (
+																appList.map(app => (
+																	<div
+																		key={app.id}
+																		className={`mb-3 flex items-center gap-2 cursor-pointer ${currentApp?.config.id === app.id ? 'bg-primary/10 border border-primary rounded' : ''}`}
+																		onClick={() => handleAppSelect(app)}
+																	>
+																		<AppIcon app={app} size="small" />
+																		<span className={currentApp?.config.id === app.id ? 'text-primary font-semibold' : ''}>
+																			{app.info.name}
+																		</span>
+																	</div>
+																))
+															) : (
+																<Empty description={t("No apps")} />
+															)}
+														</Spin>
+													</div>
+												),
+											},
+											{
+												key: 'chat',
+												label: (
+													<div className="w-1/2 text-center flex items-center justify-center gap-2">
+														<MessageOutlined />
+														{t('Chat')}
+													</div>
+												),
+												children: (
+													<>
+														<div className="px-4 mt-3 flex-1 overflow-auto">
+															{conversationListWithEmpty}
+														</div>
+													</>
+												),
+											},
+										]}
+									/>
 								) : (
 									<div className="flex flex-col justify-start items-center flex-1 pt-6">
 										{/* 应用图标 */}
 										<div className="mb-1.5 flex items-center justify-center">
-											<AppIcon size="small" />
+											<AppIcon app={currentApp} size="small" />
 										</div>
-
-										{/* 新增对话 */}
-										<Tooltip
-											title="新增对话"
-											placement="right"
-										>
-											<div className="text-theme-text my-1.5 hover:text-primary flex items-center">
-												<LucideIcon
-													name="plus-circle"
-													strokeWidth={1.25}
-													size={28}
-													className="cursor-pointer"
-													onClick={() => {
-														onAddConversation()
-													}}
-												/>
-											</div>
-										</Tooltip>
-
 										<Popover
 											content={
 												<div className="max-h-[50vh] overflow-auto pr-3">
 													{conversationListWithEmpty}
 												</div>
 											}
-											title="对话列表"
+											title={t("Conversations")}
 											placement="rightTop"
 										>
 											{/* 必须包裹一个 HTML 标签才能正常展示 Popover */}
@@ -473,22 +578,20 @@ export default function ChatLayout(props: IChatLayoutProps) {
 								)}
 
 								<div className="border-0 border-t border-solid border-theme-splitter flex items-center justify-center h-12">
-									<Tooltip
-										title={sidebarOpen ? '折叠侧边栏' : '展开侧边栏'}
-										placement="right"
-									>
-										<div className="flex items-center justify-center">
-											<LucideIcon
-												onClick={() => {
-													setSidebarOpen(!sidebarOpen)
-												}}
-												name={sidebarOpen ? 'arrow-left-circle' : 'arrow-right-circle'}
-												className="cursor-pointer hover:text-primary"
-												strokeWidth={1.25}
-												size={28}
-											/>
-										</div>
-									</Tooltip>
+									<div className="flex items-center justify-between w-full">
+										{sidebarOpen && (
+											<span className="text-theme-text ml-2">{userId.split('@')[0] || 'Anonymous'}</span>
+										)}
+										<LucideIcon
+											onClick={() => {
+												setSidebarOpen(!sidebarOpen)
+											}}
+											name={sidebarOpen ? 'arrow-left-circle' : 'arrow-right-circle'}
+											className="cursor-pointer hover:text-primary"
+											strokeWidth={1.25}
+											size={28}
+										/>
+									</div>
 								</div>
 							</div>
 
@@ -505,7 +608,7 @@ export default function ChatLayout(props: IChatLayoutProps) {
 					) : (
 						<div className="w-full h-full flex items-center justify-center">
 							<Empty
-								description="暂无 Dify 应用配置，请联系管理员"
+								description={t("No apps")}
 								className="text-base"
 							/>
 						</div>

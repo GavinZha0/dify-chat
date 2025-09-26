@@ -1,10 +1,11 @@
-import { BugOutlined, ClearOutlined, CloseOutlined, SaveOutlined } from '@ant-design/icons'
+import { BugOutlined, SettingOutlined, ClearOutlined, CloseOutlined, SaveOutlined } from '@ant-design/icons'
 import { createDifyApiInstance } from '@dify-chat/api'
 import { IDifyAppItem } from '@dify-chat/core'
 import { generateUuidV4 } from '@dify-chat/helpers'
 import { useRequest } from 'ahooks'
 import { Button, Drawer, FloatButton, Form, Input, message, Space, Typography } from 'antd'
 import React, { useEffect, useState } from 'react'
+import { LocalStorageKeys, LocalStorageStore } from '@dify-chat/helpers';
 
 const { TextArea } = Input
 const { Text } = Typography
@@ -45,12 +46,13 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 	useEffect(() => {
 		if (drawerOpen) {
 			// 打开抽屉时，加载当前的调试配置
-			const debugApps = getDebugApps()
-			if (debugApps.length > 0) {
-				form.setFieldsValue({
-					debugApps: JSON.stringify(debugApps, null, 2),
-				})
-			}
+			getDebugApps().then(debugApps => {
+				if (debugApps.length > 0) {
+					form.setFieldsValue({
+						debugApps: JSON.stringify(debugApps, null, 2),
+					})
+				}
+			})
 		}
 	}, [drawerOpen, form])
 
@@ -62,7 +64,7 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 
 				// 验证应用配置格式
 				if (!Array.isArray(apps)) {
-					throw new Error('配置必须是数组格式')
+					throw new Error('Must be array')
 				}
 
 				// 为每个应用添加 ID（如果没有的话）
@@ -95,7 +97,7 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 		{
 			manual: true,
 			onSuccess: () => {
-				message.success('调试配置保存成功')
+				message.success('Saved')
 				setTimeout(() => {
 					// 刷新页面以应用新配置
 					window.location.href = '/dify-chat'
@@ -114,7 +116,7 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 
 			if (!debugAppsText) {
 				localStorage.removeItem(DEBUG_APPS_KEY)
-				message.success('调试配置已清空')
+				message.success('Cleaned up')
 				setTimeout(() => {
 					window.location.href = '/dify-chat'
 				}, 1000)
@@ -123,7 +125,7 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 
 			await saveDebugApps(debugAppsText)
 		} catch (error) {
-			message.error(`配置格式错误: ${error instanceof Error ? error.message : '未知错误'}`)
+			message.error(`format issue: ${error instanceof Error ? error.message : 'Unknown issue'}`)
 		}
 	}
 
@@ -146,25 +148,30 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 	}
 
 	// 如果URL中没有isDebug=true参数，不显示调试按钮
+	// Hide debug button
 	if (!shouldShowDebugButton) {
+		return null
+	}
+	// 如果不是从URL进入调试模式，不显示调试按钮
+	if (!isDebugModeUrl()) {
 		return null
 	}
 
 	return (
 		<>
-			<FloatButton
+			<Button
 				className={className}
-				icon={<BugOutlined />}
+				icon={<SettingOutlined />}
 				onClick={() => setDrawerOpen(true)}
-				tooltip="调试模式"
+				tooltip="Debug mode"
 				type="primary"
 			/>
 
 			<Drawer
 				title={
 					<div className="flex items-center">
-						<BugOutlined className="mr-2" />
-						调试模式配置
+						<SettingOutlined className="mr-2" />
+						App config
 					</div>
 				}
 				width={600}
@@ -175,19 +182,19 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 						icon={<CloseOutlined />}
 						onClick={() => setDrawerOpen(false)}
 					>
-						关闭
+						Close
 					</Button>
 				}
 			>
 				<div className="space-y-6">
 					{/* 应用配置编辑 */}
 					<div>
-						<div className="font-semibold text-base">应用配置</div>
+						<div className="font-semibold text-base">App config</div>
 						<Text
 							type="secondary"
 							className="block mb-3"
 						>
-							请输入 JSON 格式的应用配置数组。每个应用需要包含 info 和 requestConfig 字段。
+							Json with id, info, requestConfig.
 						</Text>
 
 						<Form
@@ -203,10 +210,10 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 											try {
 												const parsed = JSON.parse(value)
 												if (!Array.isArray(parsed)) {
-													throw new Error('必须是数组格式')
+													throw new Error('Must be array')
 												}
 											} catch {
-												throw new Error('JSON 格式错误')
+												throw new Error('invalid Json')
 											}
 										},
 									},
@@ -228,7 +235,7 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 									})
 								}}
 							>
-								使用示例配置
+								Show example
 							</Button>
 							<Button
 								type="default"
@@ -236,13 +243,13 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 								onClick={() => {
 									localStorage.removeItem(DEBUG_APPS_KEY)
 									sessionStorage.removeItem(DEBUG_MODE_KEY)
-									message.success('调试配置已清空')
+									message.success('Cleaned up')
 									setTimeout(() => {
 										window.location.href = '/dify-chat'
 									}, 1000)
 								}}
 							>
-								{isAlwaysDebugMode() ? '清空调试配置' : '退出调试模式'}
+								{isAlwaysDebugMode() ? 'Clean' : 'Exit'}
 							</Button>
 							<Button
 								type="primary"
@@ -250,23 +257,22 @@ const DebugMode: React.FC<DebugModeProps> = ({ className }) => {
 								loading={saveDebugAppsLoading}
 								onClick={handleSaveConfig}
 							>
-								保存配置
+								Apply
 							</Button>
 						</Space>
 					</div>
 
 					{/* 使用说明 */}
 					<div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-						<div className="font-semibold !mb-2 text-base">使用说明</div>
+						<div className="font-semibold !mb-2 text-base">Instruction</div>
 						<div className="text-sm space-y-1 text-gray-600 dark:text-gray-300">
 							<div>
-								• 配置格式需要符合{' '}
+								• Follow the specification {' '}
 								<span className="font-mono">
 									<a target="_blank">IDifyAppItem</a>
-								</span>{' '}
-								接口规范
+								</span>
 							</div>
-							<div>• 保存配置后页面会自动刷新以应用新设置</div>
+							<div>• Page will be refreshed after config is applied</div>
 						</div>
 					</div>
 				</div>
@@ -295,10 +301,15 @@ export const isDebugMode = (): boolean => {
 	return sessionStorage.getItem(DEBUG_MODE_KEY) === 'true' || isDebugModeFromURL()
 }
 
+
+export const isDebugModeUrl = (): boolean => {
+	return isDebugModeFromURL()
+}
+
 /**
  * 获取调试应用配置
  */
-export const getDebugApps = (): IDifyAppItem[] => {
+export const getDebugApps = async (): Promise<IDifyAppItem[]> => {
 	if (!isDebugMode()) {
 		return []
 	}
@@ -309,9 +320,24 @@ export const getDebugApps = (): IDifyAppItem[] => {
 	}
 
 	try {
-		return JSON.parse(debugApps)
+		// return JSON.parse(debugApps)
+		const userGroup = LocalStorageStore.get(LocalStorageKeys.USER_GROUP)
+		const appCfg = await fetch('/dify-chat/app_config.json')
+		if (!appCfg.ok) {
+			console.error('Failed to fetch app_config.json')
+		}
+		const appInfo = await appCfg.json()
+		const licensedApps = []
+		for(const app of appInfo) {
+			if(app.info.tags.includes(userGroup)) {
+				// enable the app if group matches
+				// enable all apps for group ADM
+				licensedApps.push(app)
+			}
+		}
+		return licensedApps
 	} catch (err) {
-		console.error('解析调试应用配置失败:', err)
+		console.error('Fail to parse app config:', err)
 		return []
 	}
 }

@@ -15,6 +15,7 @@
 	--theme-warning-color: #faad14;
 	--theme-danger-color: #ff4d4f;
 	--theme-bubble-bg-color: #f2f4f7;
+	--theme-user-bubble-bg-color: #C5E1A5;
 	--theme-code-block-bg-color: #fff;
 }
 
@@ -65,7 +66,7 @@
 			.ant-bubble-content {
 				padding-left: 10px;
 				padding-right: 10px;
-				background-color: var(--theme-bubble-bg-color);
+				background-color: var(--theme-user-bubble-bg-color);
 				color: #fff;
 			}
 		}

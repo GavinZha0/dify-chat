@@ -12,17 +12,19 @@ import { useHistory, useParams } from 'pure-react-router'
 import { useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 
-import { DebugMode, LucideIcon } from '@/components'
+import { LucideIcon } from '@/components'
 import { isDebugMode } from '@/components/debug-mode'
 import { useAuth } from '@/hooks/use-auth'
 import appService from '@/services/app'
 import { createDifyApiInstance, DifyApi } from '@/utils/dify-api'
 
 import MainLayout from './main-layout'
+import { useLanguage } from '@/language/language-context.tsx'
 
 const MultiAppLayout = () => {
 	const history = useHistory()
 	const { userId } = useAuth()
+	const { t } = useLanguage()
 
 	const [difyApi] = useState(
 		createDifyApiInstance({
@@ -65,7 +67,7 @@ const MultiAppLayout = () => {
 				}
 			},
 			onError: error => {
-				message.error(`获取应用列表失败: ${error}`)
+				message.error(`Fail to get apps: ${error}`)
 				console.error(error)
 			},
 			onFinally: () => {
@@ -93,7 +95,7 @@ const MultiAppLayout = () => {
 				.catch(err => {
 					console.error(err)
 					console.warn(
-						'Dify 版本提示: 获取应用 WebApp 设置失败，已降级为使用默认设置。如需与 Dify 配置同步，请确保你的 Dify 版本 >= v1.4.0',
+						'Fail to get apps, please confirm Dify >= v1.4.0',
 					)
 					return DEFAULT_APP_SITE_SETTING
 				})
@@ -137,7 +139,7 @@ const MultiAppLayout = () => {
 				})
 			})
 			.catch(err => {
-				message.error(`获取应用参数失败: ${err}`)
+				message.error(`Fail to get parameters: ${err}`)
 				console.error(err)
 				setCurrentApp(undefined)
 			})
@@ -185,7 +187,7 @@ const MultiAppLayout = () => {
 										history.push('/apps')
 									}}
 								>
-									应用列表
+									{t('Apps')}
 								</span>
 								{selectedAppId ? (
 									<div className="flex items-center overflow-hidden">
@@ -225,7 +227,6 @@ const MultiAppLayout = () => {
 												<span className="cursor-pointer w-full inline-block truncate">
 													{currentApp?.config?.info?.name}
 												</span>
-												<DownCircleTwoTone className="ml-1" />
 											</div>
 										</Dropdown>
 									</div>
@@ -234,7 +235,6 @@ const MultiAppLayout = () => {
 						)
 					}}
 				/>
-				<DebugMode />
 			</>
 		</AppContextProvider>
 	)

@@ -22,6 +22,7 @@ import {
 	MessageFileList,
 	WorkflowLogs,
 } from '@/components'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IWorkflowLayoutProps {
 	difyApi: DifyApi
@@ -44,6 +45,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 	const [files, setFiles] = useState<IMessageFileItem[]>([])
 
 	const appMode = currentApp?.config?.info?.mode
+	const { t } = useLanguage()
 
 	const handleTriggerWorkflow = async (values: Record<string, unknown>) => {
 		const runner = () => {
@@ -56,7 +58,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 					inputs: values,
 				})
 			}
-			return Promise.reject(`不支持的应用类型: ${appMode}`)
+			return Promise.reject(`Unsupported app: ${appMode}`)
 		}
 
 		runner()
@@ -110,7 +112,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 						try {
 							parsedData = JSON.parse(chunk.data)
 						} catch (error) {
-							console.error('解析 JSON 失败', error)
+							console.error(t('Fail to parse json'), error)
 						}
 
 						const innerData = parsedData.data
@@ -210,7 +212,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 	const resultItems = [
 		{
 			key: 'result',
-			label: '结果',
+			label: t('Result'),
 			children: (
 				<div className="w-full h-full overflow-x-hidden overflow-y-auto">
 					{text ? (
@@ -224,7 +226,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 		},
 		{
 			key: 'detail',
-			label: '详情',
+			label: t('Detail'),
 			children: (
 				<div className="w-full">
 					<LucideIcon
@@ -232,7 +234,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 						name="copy"
 						onClick={async () => {
 							await copyToClipboard(JSON.stringify(resultDetail, null, 2))
-							message.success('已复制到剪贴板')
+							message.success(t('Copied to clipboard'))
 						}}
 					/>
 					<pre className="w-full overflow-auto bg-theme-code-block-bg p-3 box-border rounded-lg">
@@ -275,7 +277,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 						}}
 						loading={workflowStatus === 'running'}
 					>
-						运行
+						{t('Run')}
 					</Button>
 				</div>
 			</div>
@@ -285,7 +287,7 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 				<div className="md:flex-1 px-4 pt-6 overflow-x-hidden overflow-y-auto">
 					{!workflowItems?.length && workflowStatus !== 'running' ? (
 						<div className="w-full h-full flex items-center justify-center">
-							<Empty description={`点击 "运行" 试试看, AI 会给你带来意想不到的惊喜。 `} />
+							<Empty description={`Try "Run" `} />
 						</div>
 					) : (
 						<>
@@ -305,17 +307,17 @@ export default function WorkflowLayout(props: IWorkflowLayoutProps) {
 				<div className="md:flex-1 px-4 pt-6 relative overflow-x-hidden overflow-y-auto bg-theme-bg">
 					{textGenerateStatus === 'init' ? (
 						<div className="w-full h-full flex items-center justify-center">
-							<Empty description={`点击 "运行" 试试看, AI 会给你带来意想不到的惊喜。 `} />
+							<Empty description={t('Try "Run" ')} />
 						</div>
 					) : (
 						<>
 							<MarkdownRenderer markdownText={text} />
-							<Tooltip title="复制内容">
+							<Tooltip title={t("Copy")}>
 								<CopyOutlined
 									className="absolute top-6 right-6 cursor-pointer"
 									onClick={async () => {
 										await copyToClipboard(text)
-										message.success('已复制到剪贴板')
+										message.success('Copied to clipboard')
 									}}
 								/>
 							</Tooltip>

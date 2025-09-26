@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import {useLanguage} from "@/language/language-context.tsx"
 
 const hasEndThink = (children: any): boolean => {
 	if (typeof children === 'string') return children.includes('[ENDTHINKFLAG]')
@@ -54,6 +55,7 @@ const useThinkTimer = (children: React.JSX.Element) => {
 export const ThinkBlock = ({ children, ...props }: any) => {
 	const { elapsedTime, isComplete } = useThinkTimer(children)
 	const displayContent = removeEndThink(children)
+	const { t } = useLanguage()
 
 	if (!(props['data-think'] ?? false)) return <details {...props}>{children}</details>
 
@@ -78,8 +80,8 @@ export const ThinkBlock = ({ children, ...props }: any) => {
 						/>
 					</svg>
 					{isComplete
-						? `已完成深度思考`
-						: `深度思考中...(${elapsedTime.toFixed(1)}s)`}
+						? t('Thought')
+						: `${t('Thinking')}...(${elapsedTime.toFixed(1)}s)`}
 				</div>
 			</summary>
 			<div className={`border-l mt-1 rounded-lg border-gray-300 ml-5 text-theme-desc`}>

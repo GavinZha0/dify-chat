@@ -29,7 +29,7 @@ export default function CommonLayout(props: ICommonLayoutProps) {
 				) : (
 					<div className="w-full h-full flex items-center justify-center">
 						<Empty
-							description="暂无 Dify 应用配置，请联系管理员"
+							description="No application configured"
 							className="text-base"
 						/>
 					</div>

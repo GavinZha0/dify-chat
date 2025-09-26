@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { FileTypeMap, getDifyFileType, getFileExtByName } from './utils'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IMessageSenderProps {
 	/**
@@ -61,6 +62,7 @@ export const MessageSender = (props: IMessageSenderProps) => {
 	const senderRef = useRef<GetRef<typeof Sender>>(null)
 	const { isLight } = useThemeContext()
 	const { currentConversationId } = useConversationsContext()
+	const { t } = useLanguage()
 
 	// 监听对话切换时，自动聚焦输入框
 	useEffect(() => {
@@ -72,16 +74,11 @@ export const MessageSender = (props: IMessageSenderProps) => {
 	}
 
 	const allowedFileTypes = useMemo(() => {
-		if (!currentApp?.parameters?.file_upload) {
+		if (currentApp?.parameters?.file_upload?.allowed_file_extensions) {
+			return currentApp?.parameters?.file_upload?.allowed_file_extensions
+		} else {
 			return []
 		}
-		const result: string[] = []
-		currentApp.parameters.file_upload.allowed_file_types?.forEach(item => {
-			if (FileTypeMap.get(item)) {
-				result.push(...((FileTypeMap.get(item) as string[]) || []))
-			}
-		})
-		return result
 	}, [currentApp?.parameters?.file_upload])
 
 	const handleUpload = async (file: RcFile) => {
@@ -145,7 +142,7 @@ export const MessageSender = (props: IMessageSenderProps) => {
 
 	const senderHeader = (
 		<Sender.Header
-			title="上传文件"
+			title={t("Upload file")}
 			open={open}
 			onOpenChange={setOpen}
 			styles={{
@@ -161,8 +158,8 @@ export const MessageSender = (props: IMessageSenderProps) => {
 					// 自定义上传
 					const ext = getFileExtByName(file.name)
 					// 校验文件类型
-					if (allowedFileTypes.length > 0 && !allowedFileTypes.includes(ext!)) {
-						message.error(`不支持的文件类型: ${ext}`)
+					if (ext && allowedFileTypes.length > 0 && !allowedFileTypes.includes("." + ext.toUpperCase())) {
+						message.error(`Unsupported type: ${ext}`)
 						return false
 					}
 
@@ -173,14 +170,13 @@ export const MessageSender = (props: IMessageSenderProps) => {
 				placeholder={type =>
 					type === 'drop'
 						? {
-								title: 'Drop file here',
+								title: t('Drop file here'),
 							}
 						: {
 								icon: <CloudUploadOutlined />,
-								title: '点击或拖拽文件到此区域上传',
+								title: t('Click or drag file into this area'),
 								description: (
 									<div>
-										支持的文件类型：
 										{allowedFileTypes.join(', ')}
 									</div>
 								),
@@ -206,7 +202,7 @@ export const MessageSender = (props: IMessageSenderProps) => {
 	 */
 	const allowSpeechConfig = useMemo(() => {
 		if (!currentApp?.parameters?.speech_to_text?.enabled) {
-			return false
+			return true
 		}
 		return {
 			recording,
@@ -229,15 +225,15 @@ export const MessageSender = (props: IMessageSenderProps) => {
 								type: 'audio/webm',
 							})
 							setAudio2TextLoading(true)
-							setContent('正在识别...')
+							setContent('Recognizing...')
 							audio2TextApi?.(blob as File)
 								.then(res => {
 									setContent(res.text)
 									recordedChunks.current = []
 								})
 								.catch(error => {
-									console.error('语音转文本错误', error)
-									message.error(`语音转文本错误: ${error}`)
+									console.error('Error in speech-to-text', error)
+									message.error(`Error in speech-to-text: ${error}`)
 									setContent('')
 								})
 								.finally(() => {
@@ -289,7 +285,7 @@ export const MessageSender = (props: IMessageSenderProps) => {
 				enableFileUpload
 					? (firstFile, files) => {
 							if (files?.length > 1) {
-								message.warning('暂不支持一次性上传多个文件，请逐个上传')
+								message.warning('Please upload one file at a time')
 								return
 							}
 							// 如果附件面板是关闭状态，则打开
@@ -303,12 +299,12 @@ export const MessageSender = (props: IMessageSenderProps) => {
 			}
 			onSubmit={async content => {
 				if (!content) {
-					message.error('内容不能为空')
+					message.error('Empty')
 					return
 				}
 				// 当文件存在时，判断是否所有文件都已上传完成
 				if (files?.length && !files.every(item => item.status === 'done')) {
-					message.error('请等待所有文件上传完成')
+					message.error('Upload not complete, please wait')
 					return
 				}
 				await onSubmit(content, {

@@ -1,0 +1,52 @@
+[
+	{
+		"id": "testagent",
+		"info": {
+			"name": "TestAgent",
+			"mode": "agent-chat",
+			"description": "AI agent",
+			"tags": ["ADM", "DEV"]
+		},
+		"isEnabled": 1,
+		"requestConfig": {
+			"apiBase": "http://localhost/v1",
+			"apiKey": "app-1234567890"
+		},
+		"answerForm": false,
+		"inputParams": {
+			"enableUpdateAfterCvstStarts": false
+		},
+		"extConfig": {
+			"conversation": {
+				"openingStatement": {
+					"displayMode": "default"
+				}
+			}
+		}
+	},
+	{
+		"id": "hellobot",
+		"info": {
+			"name": "HelloBot",
+			"mode": "chat",
+			"description": "AI chatbot",
+			"tags": ["ADM"]
+		},
+		"isEnabled": 1,
+		"requestConfig": {
+			"apiBase": "http://localhost/v1",
+			"apiKey": "app-1357924680"
+		},
+		"answerForm": false,
+		"inputParams": {
+			"enableUpdateAfterCvstStarts": false
+		},
+		"extConfig": {
+			"conversation": {
+				"openingStatement": {
+					"displayMode": "default"
+				}
+			}
+		}
+	}
+]

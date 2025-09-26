@@ -1,24 +1,45 @@
 import { TagOutlined } from '@ant-design/icons'
 import { AppModeLabels } from '@dify-chat/core'
-import { useIsMobile } from '@dify-chat/helpers'
+import { LocalStorageKeys, LocalStorageStore, useIsMobile } from '@dify-chat/helpers'
 import { useRequest } from 'ahooks'
 import { Col, Empty, message, Row } from 'antd'
 import { useHistory } from 'pure-react-router'
 
 import { DebugMode, HeaderLayout, LucideIcon } from '@/components'
 import appService from '@/services/app'
+import { useLanguage } from '@/language/language-context.tsx'
 
 export default function AppListPage() {
 	const history = useHistory()
 	const isMobile = useIsMobile()
+	const { t } = useLanguage()
 
 	const { data: list } = useRequest(
-		() => {
-			return appService.getApps()
+		async () => {
+			const loginDate = LocalStorageStore.get(LocalStorageKeys.LOGIN_DATE)
+			if (loginDate) {
+				const [y, m, d] = loginDate.split("-").map(Number)
+				const now = new Date()
+				const last = new Date(y, m - 1, d, 0, 0, 0)
+				const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
+				if (diffHours > 24) {
+					// console.error('Login expired')
+					LocalStorageStore.remove(LocalStorageKeys.USER_ID)
+					LocalStorageStore.remove(LocalStorageKeys.LOGIN_DATE)
+					// enforce to log in
+					window.location.replace('/dify-chat/auth')
+					return []
+				}
+			} else {
+				// enforce to log in
+				window.location.replace('/dify-chat/auth')
+				return []
+			}
+			return await appService.getApps()
 		},
 		{
 			onError: error => {
-				message.error(`获取应用列表失败: ${error}`)
+				message.error(`Fail to get apps: ${error}`)
 				console.error(error)
 			},
 		},
@@ -34,7 +55,7 @@ export default function AppListPage() {
 							size={16}
 							className="mr-1"
 						/>
-						应用列表
+						{t('Applications')}
 					</div>
 				}
 			/>
@@ -55,7 +76,7 @@ export default function AppListPage() {
 											key={item.id}
 											className={`relative group p-3 bg-theme-btn-bg border border-solid border-theme-border rounded-2xl cursor-pointer hover:border-primary hover:text-primary`}
 										>
-											应用信息缺失，请检查
+											No app info
 										</div>
 									</Col>
 								)
@@ -68,12 +89,16 @@ export default function AppListPage() {
 								>
 									<div
 										key={item.id}
-										className={`relative group p-3 bg-theme-btn-bg border border-solid border-theme-border rounded-2xl cursor-pointer hover:border-primary hover:text-primary`}
+										className={`relative group p-3 bg-theme-btn-bg border border-solid border-theme-border rounded-2xl cursor-pointer hover:border-primary hover:text-primary
+      								${item.isEnabled === 0 ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
 									>
 										<div
 											onClick={() => {
-												history.push(`/app/${item.id}`)
+												if (item.isEnabled !== 0) {
+													history.push(`/app/${item.id}`)
+												}
 											}}
+											style={item.isEnabled === 0 ? { pointerEvents: 'none' } : {}}
 										>
 											<div className="flex items-center overflow-hidden">
 												<div className="h-10 w-10 bg-[#ffead5] dark:bg-transparent border border-solid border-transparent dark:border-theme-border rounded-lg flex items-center justify-center">
@@ -90,14 +115,14 @@ export default function AppListPage() {
 												</div>
 											</div>
 											<div className="text-sm mt-3 h-10 overflow-hidden text-ellipsis leading-5 whitespace-normal line-clamp-2 text-theme-desc">
-												{item.info.description || '暂无描述'}
+												{item.info.description || 'No description'}
 											</div>
 										</div>
 										<div className="flex items-center text-desc truncate mt-3 h-4">
 											{hasTags ? (
 												<>
 													<TagOutlined className="mr-2" />
-													{item.info.tags.join('、')}
+													{item.info.tags.join(', ')}
 												</>
 											) : null}
 										</div>
@@ -108,7 +133,7 @@ export default function AppListPage() {
 					</Row>
 				) : (
 					<div className="w-full h-full box-border flex flex-col items-center justify-center px-3">
-						<Empty description="暂无应用" />
+						<Empty description="No applications" />
 					</div>
 				)}
 			</div>

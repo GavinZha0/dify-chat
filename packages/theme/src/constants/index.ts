@@ -19,9 +19,9 @@ export enum ThemeModeEnum {
  * 主题模式文本枚举
  */
 export enum ThemeModeLabelEnum {
-	SYSTEM = '跟随系统',
-	LIGHT = '浅色',
-	DARK = '深色',
+	SYSTEM = 'System',
+	LIGHT = 'Light',
+	DARK = 'Dark',
 }
 
 /**

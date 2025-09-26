@@ -9,19 +9,38 @@ import { completeFileUrl } from '@/utils'
 /**
  * 应用图标
  */
-export default function AppIcon(props: { size?: 'small' | 'default'; hasContainer?: boolean }) {
-	const { size = 'default', hasContainer = false } = props
+export default function AppIcon(props: { app: any; size?: 'small' | 'default'; hasContainer?: boolean }) {
+	const { size = 'default', hasContainer = false, app } = props
 
 	const { currentApp } = useAppContext()
 	const { isDark } = useThemeContext()
 
 	const renderProps = useMemo(() => {
-		return {
-			background: currentApp?.site?.icon_background || '#ffead5',
-			type: currentApp?.site?.icon_type || 'emoji',
-			icon: currentApp?.site?.icon_url
-				? completeFileUrl(currentApp?.site?.icon_url, currentApp?.config.requestConfig.apiBase)
-				: currentApp?.site?.icon || '🤖',
+		// default icon
+		let theIcon = '🤖'
+
+		if(currentApp?.config?.id === app?.id){
+			if(currentApp?.site?.icon_url){
+				// image
+				theIcon = completeFileUrl(currentApp?.site?.icon_url, currentApp?.config.requestConfig.apiBase)
+			}
+			else {
+				// emoji
+				theIcon = currentApp?.site?.icon || '🤖'
+			}
+
+			return {
+				background: currentApp?.site?.icon_background || '#ffead5',
+				type: currentApp?.site?.icon_type || 'emoji',
+				icon: theIcon
+			}
+		}
+		else{
+			return {
+				background: '#ffead5',
+				type: 'emoji',
+				icon: theIcon
+			}
 		}
 	}, [currentApp])
 

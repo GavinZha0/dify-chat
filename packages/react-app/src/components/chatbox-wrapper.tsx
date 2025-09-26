@@ -11,6 +11,7 @@ import { Chatbox } from '@/components'
 import { useLatest } from '@/hooks/use-latest'
 import { useX } from '@/hooks/useX'
 import workflowDataStorage from '@/hooks/useX/workflow-data-storage'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IChatboxWrapperProps {
 	/**
@@ -66,6 +67,7 @@ export default function ChatboxWrapper(props: IChatboxWrapperProps) {
 	const [initLoading, setInitLoading] = useState<boolean>(false)
 	const [historyMessages, setHistoryMessages] = useState<IMessageItem4Render[]>([])
 	const [hasMore, setHasMore] = useState<boolean>(false)
+	const { t } = useLanguage()
 
 	// 添加一个状态来标记是否正在切换会话
 	const [isSwitchingConversation, setIsSwitchingConversation] = useState(false)
@@ -316,7 +318,7 @@ export default function ChatboxWrapper(props: IChatboxWrapperProps) {
 	}
 
 	useEffect(() => {
-		if (!messagesloadingEnabled) {
+		if (!messagesloadingEnabled && !isTempId(currentConversationId)) {
 			setMessagesloadingEnabled(true)
 		} else {
 			// 只有允许 loading 时，才清空对话列表数据
@@ -372,10 +374,10 @@ export default function ChatboxWrapper(props: IChatboxWrapperProps) {
 				status: item.status,
 				// @ts-expect-error TODO: 类型待优化
 				error: item.message.error || '',
-				workflows: item.message.workflows,
-				agentThoughts: item.message.agentThoughts,
-				retrieverResources: item.message.retrieverResources,
-				files: item.message.files,
+				workflows: item.message.workflows || [],
+				agentThoughts: item.message.agentThoughts || [],
+				retrieverResources: item.message.retrieverResources || [],
+				files: item.message.files || [],
 				content: item.message.content,
 				role: item.status === Roles.LOCAL ? Roles.USER : Roles.AI,
 			} as IMessageItem4Render
@@ -406,12 +408,12 @@ export default function ChatboxWrapper(props: IChatboxWrapperProps) {
 	if (!currentApp) {
 		return (
 			<div className="w-full h-full flex items-center justify-center">
-				<Empty description="请先配置 Dify 应用">
+				<Empty description={t('Please configure application')}>
 					<Button
 						type="primary"
 						onClick={handleStartConfig}
 					>
-						开始配置
+						{t('Config')}
 					</Button>
 				</Empty>
 			</div>
@@ -460,6 +462,7 @@ export default function ChatboxWrapper(props: IChatboxWrapperProps) {
 						uploadFileApi={difyApi.uploadFile}
 						difyApi={difyApi}
 						entryForm={entryForm}
+						onAddConversation={onAddConversation}
 					/>
 				) : (
 					<div className="w-full h-full flex items-center justify-center">

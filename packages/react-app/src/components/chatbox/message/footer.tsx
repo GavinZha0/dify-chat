@@ -2,10 +2,12 @@ import { DifyApi, IGetAppParametersResponse, IRating } from '@dify-chat/api'
 import { copyToClipboard } from '@toolkit-fe/clipboard'
 import { useRequest, useSetState } from 'ahooks'
 import { message as antdMessage, Space } from 'antd'
+import { Modal, Input } from 'antd'
 import { useState } from 'react'
 
 import LucideIcon from '../../lucide-icon'
 import ActionButton from './action-btn'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IMessageFooterProps {
 	/**
@@ -87,22 +89,23 @@ export default function MessageFooter(props: IMessageFooterProps) {
 	})
 	const [ttsPlaying, setTTSPlaying] = useState(false)
 	const [cachedAudioUrl, setCachedAudioUrl] = useState<string>('')
+	const { t } = useLanguage()
 
 	/**
 	 * 用户对消息的反馈
 	 */
 	const { runAsync } = useRequest(
-		(rating: IRating) => {
+		(rating: IRating, content: string) => {
 			return feedbackApi({
 				messageId: (messageId as string).replace('-answer', ''),
 				rating: rating,
-				content: '',
+				content: content,
 			})
 		},
 		{
 			manual: true,
 			onSuccess() {
-				antdMessage.success('操作成功')
+				antdMessage.success(t('Succeed'))
 				callback?.()
 			},
 			onFinally() {
@@ -150,6 +153,34 @@ export default function MessageFooter(props: IMessageFooterProps) {
 		},
 	)
 
+	const [showDislikeModal, setShowDislikeModal] = useState(false)
+	const [dislikeFeedback, setDislikeFeedback] = useState('')
+
+	// click 👎
+	const handleDislikeClick = () => {
+		if(isDisLiked){
+			// revert if it had been marked as 👎
+			runAsync(null, '')
+		} else {
+			setShowDislikeModal(true)
+		}
+
+	}
+
+// confirm 👎
+	const handleDislikeConfirm = async () => {
+		setLoading({ dislike: true })
+		await runAsync('dislike', dislikeFeedback)
+		setShowDislikeModal(false)
+		setDislikeFeedback('')
+	}
+
+// cancel 👎
+	const handleDislikeCancel = () => {
+		setShowDislikeModal(false)
+		setDislikeFeedback('')
+	}
+
 	/**
 	 * 操作按钮列表
 	 */
@@ -167,7 +198,7 @@ export default function MessageFooter(props: IMessageFooterProps) {
 			icon: <LucideIcon name="copy" />,
 			onClick: async () => {
 				await copyToClipboard(messageContent)
-				antdMessage.success('复制成功')
+				antdMessage.success(t('Copied'))
 			},
 			active: false,
 			loading: false,
@@ -180,7 +211,7 @@ export default function MessageFooter(props: IMessageFooterProps) {
 				setLoading({
 					like: true,
 				})
-				runAsync(isLiked ? null : 'like')
+				runAsync(isLiked ? null : 'like', '')
 			},
 			active: isLiked,
 			loading: loading.like,
@@ -189,12 +220,7 @@ export default function MessageFooter(props: IMessageFooterProps) {
 		// 点踩
 		{
 			icon: <LucideIcon name="thumbs-down" />,
-			onClick: () => {
-				setLoading({
-					dislike: true,
-				})
-				runAsync(isDisLiked ? null : 'dislike')
-			},
+			onClick: handleDislikeClick,
 			active: isDisLiked,
 			loading: loading.dislike,
 			hidden: false,
@@ -230,6 +256,7 @@ export default function MessageFooter(props: IMessageFooterProps) {
 	]
 
 	return (
+	<>
 		<Space>
 			{actionButtons.map(
 				(buttonProps, index) =>
@@ -245,5 +272,21 @@ export default function MessageFooter(props: IMessageFooterProps) {
 					),
 			)}
 		</Space>
+		<Modal
+			title={t("Please provide feedback")}
+			open={showDislikeModal}
+			onOk={handleDislikeConfirm}
+			onCancel={handleDislikeCancel}
+			okText="Confirm"
+			cancelText="Cancel"
+		>
+			<Input.TextArea
+				value={dislikeFeedback}
+				onChange={e => setDislikeFeedback(e.target.value)}
+				placeholder={t("Enter feedback")}
+				rows={4}
+			/>
+		</Modal>
+	</>
 	)
 }

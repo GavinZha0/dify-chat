@@ -10,6 +10,8 @@ const LocalStorageKeyList = [
 	'THEME_MODE',
 	'RUNNING_MODE',
 	'ENABLE_SETTING',
+	'LOGIN_DATE',
+	'USER_GROUP'
 ] as const
 
 export const LocalStorageKeys = LocalStorageKeyList.reduce(
@@ -76,6 +78,12 @@ class LocalStorageStoreBuilder {
 		}
 		const storageKey = genLocalStorageKey(key)
 		localStorage.setItem(storageKey, value)
+	}
+
+	remove = (key: ILocalStorageKey) => {
+		this.validateKey(key)
+		const storageKey = genLocalStorageKey(key)
+		localStorage.removeItem(storageKey)
 	}
 }
 

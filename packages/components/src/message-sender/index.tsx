@@ -171,10 +171,10 @@ export const MessageSender = (props: IMessageSenderProps) => {
 							}
 						: {
 								icon: <CloudUploadOutlined />,
-								title: '点击或拖拽文件到此区域上传',
+								title: 'Click or drag the file into this area',
 								description: (
 									<div>
-										支持的文件类型：
+										Supported type：
 										{allowedFileTypes.join(', ')}
 									</div>
 								),

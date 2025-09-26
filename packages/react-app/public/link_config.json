@@ -1,0 +1,14 @@
+[
+	{
+		"name": "Dify",
+		"url": "http://localhost/apps"
+	},
+	{
+		"name": "Langfuse",
+		"url": "http://localhost:3030/en"
+	},
+	{
+		"name": "Higress",
+		"url": "http://localhost:3300/mcp/list"
+	}
+]

@@ -75,7 +75,7 @@ export default function MessageFileList(props: IMessageFileListProps) {
 			{files.map((item: IMessageFileItem) => {
 				return (
 					<a
-						title="点击下载文件"
+						title="Click to download"
 						href={item.url}
 						target="_blank"
 						rel="noreferrer"

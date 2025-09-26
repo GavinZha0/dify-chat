@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Conversations } from '@ant-design/x'
 import { Form, Input, message, Modal } from 'antd'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IConversationItem {
 	key: string
@@ -38,6 +39,7 @@ export const ConversationList = (props: IConversationListProps) => {
 		props
 
 	const [renameForm] = Form.useForm()
+	const { t } = useLanguage()
 
 	/**
 	 * 删除会话
@@ -45,7 +47,7 @@ export const ConversationList = (props: IConversationListProps) => {
 	 */
 	const deleteConversation = async (conversationId: string) => {
 		await deleteConversationPromise(conversationId)
-		message.success('删除成功')
+		message.success('Deleted')
 	}
 
 	/**
@@ -58,14 +60,14 @@ export const ConversationList = (props: IConversationListProps) => {
 		})
 		Modal.confirm({
 			destroyOnClose: true,
-			title: '编辑对话名称',
+			title: t('Edit'),
 			content: (
 				<Form
 					form={renameForm}
 					className="mt-3"
 				>
 					<Form.Item name="name">
-						<Input placeholder="请输入" />
+						<Input placeholder="Please input" />
 					</Form.Item>
 				</Form>
 			),
@@ -73,7 +75,7 @@ export const ConversationList = (props: IConversationListProps) => {
 				await renameForm.validateFields()
 				const values = await renameForm.validateFields()
 				await renameConversationPromise(conversation.key, values.name)
-				message.success('对话重命名成功')
+				message.success('Renamed')
 			},
 		})
 	}
@@ -87,12 +89,12 @@ export const ConversationList = (props: IConversationListProps) => {
 			menu={conversation => ({
 				items: [
 					{
-						label: '重命名',
+						label: t('Rename'),
 						key: 'rename',
 						icon: <EditOutlined />,
 					},
 					{
-						label: '删除',
+						label: t('Delete'),
 						key: 'delete',
 						icon: <DeleteOutlined />,
 						danger: true,

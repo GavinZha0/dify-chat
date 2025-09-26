@@ -42,7 +42,7 @@ class AppService implements IAppStorageAdapter {
 	async getApps(): Promise<IDifyAppItem[]> {
 		// 检查是否开启调试模式
 		if (isDebugMode()) {
-			const debugApps = getDebugApps()
+			const debugApps = await getDebugApps()
 			return debugApps
 		}
 
@@ -53,7 +53,7 @@ class AppService implements IAppStorageAdapter {
 	async getAppByID(id: string): Promise<IDifyAppItem> {
 		// 检查是否开启调试模式
 		if (isDebugMode()) {
-			const debugApps = getDebugApps()
+			const debugApps = await getDebugApps()
 			const debugApp = debugApps.find(app => app.id === id)
 			if (debugApp) {
 				return debugApp

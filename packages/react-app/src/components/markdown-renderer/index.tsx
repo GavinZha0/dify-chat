@@ -26,6 +26,7 @@ import SVGRenderer from './blocks/svg-renderer'
 import ThinkBlock from './blocks/think-block'
 import VideoBlock from './blocks/video'
 import './index.css'
+import { useLanguage } from '@/language/language-context.tsx'
 
 // Available language https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD
 const capitalizationLanguageNameMap: Record<string, string> = {
@@ -124,6 +125,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: ICodeBlockPro
 	const match = /language-(\w+)/.exec(className || '')
 	const language = match?.[1]
 	const languageShowName = getCorrectCapitalizationLanguageName(language || '')
+	const { t } = useLanguage()
 	const chartData = useMemo(() => {
 		if (language === 'echarts') {
 			try {
@@ -208,7 +210,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: ICodeBlockPro
 							name="copy"
 							onClick={async () => {
 								await copyToClipboard(String(children).replace(/\n$/, ''))
-								message.success('复制成功')
+								message.success(t('Copied'))
 							}}
 						/>
 					</Button>

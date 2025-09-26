@@ -1,12 +1,14 @@
-import { LucideIcon } from '@/components'
-import { useIsMobile } from '@dify-chat/helpers'
+import { DebugMode, LucideIcon } from '@/components'
+import { LocalStorageKeys, LocalStorageStore, useIsMobile } from '@dify-chat/helpers'
 import { ThemeSelector, useThemeContext } from '@dify-chat/theme'
-import { Space } from 'antd'
+import { Button, Space } from 'antd'
 import classNames from 'classnames'
 import React from 'react'
 
 import CenterTitleWrapper from './center-title-wrapper'
-import { GithubIcon, Logo } from './logo'
+import { Logo } from './logo'
+import ExternalLinksDropdown from '@/components/externalLinks/links-dropdown.tsx'
+import { LanguageToggle } from '@/language/language-toggle.tsx'
 
 export interface IHeaderLayoutProps {
 	/**
@@ -52,6 +54,12 @@ export default function HeaderLayout(props: IHeaderLayoutProps) {
 	const { isTitleWrapped, title, rightIcon, logoText, renderLogo } = props
 	const { themeMode } = useThemeContext()
 	const isMobile = useIsMobile()
+
+	const handleLogout = () => {
+		LocalStorageStore.remove(LocalStorageKeys.LOGIN_DATE)
+		window.location.replace('/dify-chat/auth')
+	}
+
 	return (
 		<div className="h-16 flex items-center justify-between px-4">
 			{/* 🌟 Logo */}
@@ -72,23 +80,28 @@ export default function HeaderLayout(props: IHeaderLayoutProps) {
 				{rightIcon || (
 					<Space
 						className="flex items-center"
-						size={16}
+						size={6}
 					>
+						<DebugMode />
 						<ThemeSelector>
-							<div className="flex items-center cursor-pointer">
+							<Button size="small" style={{ border: 'none' }}>
 								<LucideIcon
 									name={
 										themeMode === 'dark'
 											? 'moon-star'
 											: themeMode === 'light'
 												? 'sun'
-												: 'screen-share'
+												: 'monitor-dot'
 									}
-									size={20}
+									size={16}
 								/>
-							</div>
+							</Button>
 						</ThemeSelector>
-						<GithubIcon />
+						<ExternalLinksDropdown />
+						<LanguageToggle></LanguageToggle>
+						<div className="flex items-center cursor-pointer" onClick={handleLogout}>
+							<LucideIcon name="log-out" size={16} />
+						</div>
 					</Space>
 				)}
 			</HeaderSiderIcon>

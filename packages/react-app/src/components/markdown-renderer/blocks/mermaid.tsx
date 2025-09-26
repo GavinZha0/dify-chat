@@ -104,8 +104,8 @@ const Flowchart = (
 								else setLook('classic')
 							}}
 						>
-							<Radio value="classic">经典</Radio>
-							<Radio value="handDrawn">手绘</Radio>
+							<Radio value="classic">Classic</Radio>
+							<Radio value="handDrawn">Hand-drawn</Radio>
 						</Radio.Group>
 					</label>
 				</div>

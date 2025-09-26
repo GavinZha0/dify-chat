@@ -52,7 +52,7 @@ export const WelcomePlaceholder = (props: IWelcomePlaceholderProps) => {
 				size={12}
 				direction="vertical"
 				className={classNames({
-					'w-full md:w-[720px]': true,
+					'w-full md:w-[960px]': true,
 					'pb-6': !showPrompts && currentApp?.parameters.user_input_form?.length,
 					'pt-3': showPrompts,
 				})}

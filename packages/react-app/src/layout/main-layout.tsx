@@ -55,7 +55,7 @@ const MainLayout = (props: IMainLayoutProps) => {
 					{isWorkflowLikeApp(appMode) ? (
 						<WorkflowLayout difyApi={props.difyApi} />
 					) : (
-						<div>不支持的应用类型</div>
+						<div>Unsupported app</div>
 					)}
 				</CommonLayout>
 			)}

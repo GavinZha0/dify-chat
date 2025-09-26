@@ -104,28 +104,28 @@ const ReferenceItem = (props: IRetrieverResourceGroupedItem) => {
 												{
 													id: `${item.segment_id}_word_count`,
 													icon: <FileWordOutlined />,
-													title: `字符: ${item.word_count}`,
+													title: `Words: ${item.word_count}`,
 													value: item.word_count,
 													visible: !!item.word_count,
 												},
 												{
 													id: `${item.segment_id}_hit_count`,
 													icon: <AimOutlined />,
-													title: `召回次数: ${item.hit_count}`,
+													title: `Hits: ${item.hit_count}`,
 													value: item.hit_count,
 													visible: !!item.hit_count,
 												},
 												{
 													id: `${item.segment_id}_index_node_hash`,
 													icon: <ShareAltOutlined />,
-													title: `向量哈希: ${item.index_node_hash}`,
+													title: `Hash: ${item.index_node_hash}`,
 													value: item.index_node_hash?.substring(0, 7),
 													visible: !!item.index_node_hash,
 												},
 												{
 													id: `${item.segment_id}_score`,
 													icon: <StarOutlined />,
-													title: `召回得分: ${item.score}`,
+													title: `Score: ${item.score}`,
 													value: item.score,
 													visible: !!item.score,
 												},
@@ -196,7 +196,7 @@ export default function MessageReferrence(props: IMessageReferrenceProps) {
 	return (
 		<div className="pb-3">
 			<div className="flex items-center text-gray-400">
-				<span className="mr-3 text-sm">引用</span>
+				<span className="mr-3 text-sm">Reference</span>
 				<div className="flex-1 border-gray-400 border-dashed border-0 border-t h-0" />
 			</div>
 			{groupedItems.map(item => {

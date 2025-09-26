@@ -7,6 +7,7 @@ import { omit } from 'lodash-es'
 import LucideIcon from '../../lucide-icon'
 import { MarkdownRenderer } from '../../markdown-renderer'
 import CollapseItem from './collapse-item'
+import { useLanguage } from '@/language/language-context.tsx'
 
 interface IThoughtChainProps {
 	/**
@@ -28,6 +29,7 @@ interface IThoughtChainProps {
  */
 export default function ThoughtChain(props: IThoughtChainProps) {
 	const { uniqueKey, items, className } = props
+	const { t } = useLanguage()
 
 	if (!items?.length) {
 		return null
@@ -37,13 +39,13 @@ export default function ThoughtChain(props: IThoughtChainProps) {
 		const collapseItems = [
 			{
 				key: `${uniqueKey}-tool_input`,
-				label: '请求',
+				label: 'REQUEST',
 				children: <CollapseItem text={item.tool_input} />,
 				visible: !!item.tool_input,
 			},
 			{
 				key: `${uniqueKey}-observation`,
-				label: '响应',
+				label: 'RESPONSE',
 				children: <CollapseItem text={item.observation} />,
 				visible: !!item.observation,
 			},
@@ -59,7 +61,7 @@ export default function ThoughtChain(props: IThoughtChainProps) {
 			title: (
 				<div className="text-base">
 					<LucideIcon name="hammer" />
-					{item.tool ? `已使用 ${item.tool}` : '暂无标题'}
+					{item.tool ? `Tool: ${item.tool}` : 'Nothing'}
 				</div>
 			),
 			status: 'success',
@@ -97,20 +99,20 @@ export default function ThoughtChain(props: IThoughtChainProps) {
 									label: (
 										<div className="flex items-center">
 											<LucideIcon name="hammer" />
-											<span className="mx-1">已使用</span> <span>{item.tool}</span>
+											<span className="mx-1">Tool: </span> <span>{item.tool}</span>
 										</div>
 									),
 									children: (
 										<div className="bg-transparent">
 											<div className="">
 												<div className="flex items-center">
-													<span className="mr-2">请求</span>
+													<span className="mr-2">REQUEST</span>
 													<LucideIcon
 														name="copy"
 														className="cursor-pointer"
 														onClick={async () => {
 															await copyToClipboard(item.tool_input)
-															message.success('复制成功')
+															message.success(t('Copied'))
 														}}
 													/>
 												</div>
@@ -120,13 +122,13 @@ export default function ThoughtChain(props: IThoughtChainProps) {
 											</div>
 											<div className="mt-2">
 												<div className="flex items-center">
-													<span className="mr-2">响应</span>
+													<span className="mr-2">RESPONSE</span>
 													<LucideIcon
 														name="copy"
 														className="cursor-pointer"
 														onClick={async () => {
 															await copyToClipboard(item.observation)
-															message.success('复制成功')
+															message.success(t('Copied'))
 														}}
 													/>
 												</div>

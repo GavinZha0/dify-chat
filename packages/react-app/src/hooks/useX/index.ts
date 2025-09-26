@@ -18,6 +18,7 @@ import { IAgentMessage, IMessageFileItem } from '@/types'
 
 import { useAuth } from '../use-auth'
 import workflowDataStorage from './workflow-data-storage'
+import { useLanguage } from '@/language/language-context.tsx'
 
 export const useX = (options: {
 	difyApi: DifyApi
@@ -48,6 +49,7 @@ export const useX = (options: {
 	const { currentApp } = useAppContext()
 	const { userId: user } = useAuth()
 	const [currentTaskId, setCurrentTaskId] = useState('')
+	const { t } = useLanguage()
 
 	const [agent] = useXAgent<IAgentMessage>({
 		request: async ({ message }, { onSuccess, onUpdate, onError }) => {
@@ -71,7 +73,7 @@ export const useX = (options: {
 
 			// 异常 => 结束
 			if (response.status !== 200) {
-				const errText = response.statusText || '请求对话接口失败'
+				const errText = response.statusText || t('Failed to fetch chat api')
 				antdMessage.error(errText)
 				// 打断输出
 				abortRef.current = () => {
@@ -136,6 +138,7 @@ export const useX = (options: {
 						tool_input: string
 						observation: string
 						message_files: string[]
+						thought: string
 
 						event: IChunkChatCompletionResponse['event']
 						answer: string
@@ -162,7 +165,7 @@ export const useX = (options: {
 					try {
 						parsedData = JSON.parse(chunk.data)
 					} catch (error) {
-						console.error('解析 JSON 失败', error)
+						console.error('Fail to parse Json', error)
 					}
 
 					// 用于回调的 ID 更新 start
@@ -195,7 +198,7 @@ export const useX = (options: {
 							agentThoughts,
 						})
 					} else if (parsedData.event === EventEnum.WORKFLOW_FINISHED) {
-						console.log('工作流结束', parsedData)
+						console.log('Complete', parsedData)
 						workflows.status = 'finished'
 						onUpdate({
 							content: result,
@@ -204,7 +207,7 @@ export const useX = (options: {
 							agentThoughts,
 						})
 					} else if (parsedData.event === EventEnum.WORKFLOW_NODE_STARTED) {
-						console.log('节点开始', parsedData)
+						console.log('Start', parsedData)
 						workflows.nodes = [
 							...(workflows.nodes || []),
 							{
@@ -301,6 +304,7 @@ export const useX = (options: {
 							observation: parsedData.observation,
 							message_files: parsedData.message_files,
 							message_id: parsedData.message_id,
+							thought: parsedData.thought || '',
 						} as IAgentThought
 
 						if (existAgentThoughtIndex !== -1) {
@@ -319,7 +323,7 @@ export const useX = (options: {
 						})
 					}
 				} else {
-					console.log('没有数据', chunk)
+					console.log('No data', chunk)
 					continue
 				}
 			}
@@ -330,7 +334,7 @@ export const useX = (options: {
 		agent,
 		requestPlaceholder: () => {
 			return {
-				content: '正在回复，请耐心等待...',
+				content: 'Responding, please wait...',
 				role: 'assistant',
 			}
 		},

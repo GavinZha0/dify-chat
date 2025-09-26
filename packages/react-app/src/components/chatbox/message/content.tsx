@@ -3,7 +3,7 @@ import { IFile, IMessageItem4Render } from '@dify-chat/api'
 import { AppModeEnums, Roles, useAppContext } from '@dify-chat/core'
 import { Tooltip } from 'antd'
 import { useMemo } from 'react'
-
+import { useLanguage } from '@/language/language-context.tsx'
 import { MarkdownRenderer } from '../../markdown-renderer'
 import ThoughtChain from '../thought-chain'
 import MessageFileList from './file-list'
@@ -48,6 +48,7 @@ export default function MessageContent(props: IMessageContentProps) {
 		},
 	} = props
 	const { currentApp } = useAppContext()
+	const { t } = useLanguage()
 
 	const computedContent = useMemo(() => {
 		const likelyJSON = content.startsWith('{') && content.endsWith('}')
@@ -59,7 +60,7 @@ export default function MessageContent(props: IMessageContentProps) {
 					const parsedValue = JSON.parse(content)
 					return parsedValue.isFormSubmit ? currentApp.config.answerForm?.feedbackText : content
 				} catch (error) {
-					console.log('computedContent json 解析失败', error)
+					console.log('Fail to parse computedContent json', error)
 					return content
 				}
 			}
@@ -89,8 +90,8 @@ export default function MessageContent(props: IMessageContentProps) {
 		return (
 			<p className="text-orange-600">
 				<WarningOutlined className="mr-2" />
-				<span>消息内容为空</span>
-				<Tooltip title="可能是用户在生成内容的过程中点击了停止响应按钮">
+				<span>No message</span>
+				<Tooltip title="Maybe stop button is clicked during AI thinking process">
 					<QuestionCircleOutlined className="ml-2" />
 				</Tooltip>
 			</p>

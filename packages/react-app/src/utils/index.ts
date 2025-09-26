@@ -17,7 +17,7 @@ export const validateAndGenErrMsgs = (
 				})
 			})
 			.catch(error => {
-				console.error('表单校验失败', error)
+				console.error('Fail to validate', error)
 				const errMsgs = (
 					error as {
 						errorFields: {

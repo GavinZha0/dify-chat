@@ -36,7 +36,7 @@ export const Primary: Story = {
 				onSubmit={value => {
 					setIsRequesting(true)
 					setTimeout(() => {
-						message.success(`发送成功: ${value}`)
+						message.success(`Sent: ${value}`)
 						setIsRequesting(false)
 					}, 3000)
 				}}

@@ -2,7 +2,7 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginLess } from '@rsbuild/plugin-less'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSourceBuild } from '@rsbuild/plugin-source-build'
-import path from 'path'
+import * as path from 'path'
 import tailwindcss from 'tailwindcss'
 
 const tsconfigDevPath = path.resolve(__dirname, './tsconfig.json')
